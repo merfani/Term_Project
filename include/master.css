@@ -1,0 +1,89 @@
+body {
+    font-family: Verdana, sans-serif;
+    font-size: small;
+    margin: 10px;
+}
+
+#container {
+    width: 720px;
+}
+
+a {
+    color: #000000;
+}
+
+p {
+    margin: 0px;
+}
+
+form {
+    margin: 0px;
+}
+
+.formtable {
+    border: 1px dotted #666666;
+    margin: auto auto 10px auto;
+    border-collapse: collapse;
+}
+
+.formtable td {
+    padding: 3px 5px 3px 5px;
+}
+
+.formtitle {
+    font-family: Georgia, serif;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.formsubmit {
+    text-align: center;
+}
+
+#logo {
+    font-size: x-large;
+}
+
+#menu {
+    float: left;
+    width: 120px;
+    text-align: center;
+    font-family: Georgia, serif;
+    font-size: medium;
+}
+
+#sectionheader {
+    margin-bottom: 5px;
+}
+
+#sectionheaderleft {
+    float: left;
+    margin-top: 5px;
+}
+
+#sectionheaderright {
+    float: right;
+    margin-top: 5px;
+}
+
+#sectionheadercenter {
+    margin-left: 170px;
+    margin-right: 170px;
+    font-family: Georgia, serif;
+    font-size: x-large;
+    text-align: center;
+}
+
+#sectionheadercenter a {
+    font-size: x-large;
+    text-decoration: none;
+}
+
+#footer {
+    margin-top: 10px;
+    font-family: Verdana, sans-serif;
+    font-size: xx-small;
+    text-align: center;
+    color: #cccccc;
+    background-color: transparent;
+}
