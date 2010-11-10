@@ -1,9 +1,9 @@
 /*
 Database              mysql 5_0
 Project Name        Asset Manager
-Project Version      Branch trunk - Version 3
-Version Date         2010-10-19 21:41 GMT
-Generated on        2010-10-19 21:41 GMT
+Project Version      Branch trunk - Version 6
+Version Date         2010-11-01 21:05 GMT
+Generated on        2010-11-01 21:05 GMT
 */
 
 /*
@@ -15,7 +15,7 @@ See http://dev.mysql.com/doc/refman/5.0/en/invoking-programs.html for more detai
 Uncomment the below USE command if the default schema already exists in your database. 
 */
 
--- USE `mydb`;
+-- USE `inventory`;
 
 /*
 This section drops existing database objects before re-creating them, if so configured under the Options tab in SchemaBank. 
@@ -31,13 +31,13 @@ SET FOREIGN_KEY_CHECKS = 1;
 This section creates the database objects defined in your project. If any of the objects already exists in the database, the mysql client program may raise an error and stop running the rest of the script.
 */
 
-/*Schema mydb*/
-CREATE SCHEMA IF NOT EXISTS `mydb`
+/*Schema inventory*/
+CREATE SCHEMA IF NOT EXISTS `inventory`
 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
 
-USE `mydb`;
+USE `inventory`;
 
-CREATE TABLE `mydb`.`systems` (
+CREATE TABLE `inventory`.`systems` (
 `hostname` VARCHAR(20) NOT NULL,
 `description` VARCHAR(20),
 `type` VARCHAR(20) NOT NULL,
@@ -46,7 +46,7 @@ PRIMARY KEY (`hostname`)
 ) ENGINE=INNODB
 ROW_FORMAT=DEFAULT;
 
-CREATE TABLE `mydb`.`physical_systems` (
+CREATE TABLE `inventory`.`physical_systems` (
 `hostname` VARCHAR(20) NOT NULL,
 `serial_number` VARCHAR(20),
 `cabinet_id` INT NOT NULL,
@@ -57,48 +57,48 @@ PRIMARY KEY (`hostname`)
 ) ENGINE=INNODB
 ROW_FORMAT=DEFAULT;
 
-CREATE TABLE `mydb`.`virtual_systems` (
+CREATE TABLE `inventory`.`virtual_systems` (
 `hostname` VARCHAR(20) NOT NULL,
 `physical_system_hostname` VARCHAR(20) NOT NULL,
 PRIMARY KEY (`hostname`)
 ) ENGINE=INNODB
 ROW_FORMAT=DEFAULT;
 
-CREATE TABLE `mydb`.`types` (
+CREATE TABLE `inventory`.`types` (
 `type` VARCHAR(20) NOT NULL,
 PRIMARY KEY (`type`)
 ) ENGINE=INNODB
 ROW_FORMAT=DEFAULT;
 
-CREATE TABLE `mydb`.`projects` (
+CREATE TABLE `inventory`.`projects` (
 `name` VARCHAR(20) NOT NULL,
 `customer_name` VARCHAR(20) NOT NULL,
 PRIMARY KEY (`name`)
 ) ENGINE=INNODB
 ROW_FORMAT=DEFAULT;
 
-CREATE TABLE `mydb`.`systems_projects` (
+CREATE TABLE `inventory`.`systems_projects` (
 `hostname` VARCHAR(20) NOT NULL,
 `project_name` VARCHAR(20) NOT NULL,
 PRIMARY KEY (`hostname`,`project_name`)
 ) ENGINE=INNODB
 ROW_FORMAT=DEFAULT;
 
-CREATE TABLE `mydb`.`customers` (
+CREATE TABLE `inventory`.`customers` (
 `name` VARCHAR(20) NOT NULL,
 `contact_email` VARCHAR(20),
 PRIMARY KEY (`name`)
 ) ENGINE=INNODB
 ROW_FORMAT=DEFAULT;
 
-CREATE TABLE `mydb`.`administrators` (
+CREATE TABLE `inventory`.`administrators` (
 `username` VARCHAR(20) NOT NULL,
 `name` VARCHAR(20),
 PRIMARY KEY (`username`)
 ) ENGINE=INNODB
 ROW_FORMAT=DEFAULT;
 
-CREATE TABLE `mydb`.`administrators_projects` (
+CREATE TABLE `inventory`.`administrators_projects` (
 `administrator_username` VARCHAR(20) NOT NULL,
 `project_name` VARCHAR(20) NOT NULL,
 `role` VARCHAR(20),
@@ -106,14 +106,14 @@ PRIMARY KEY (`administrator_username`,`project_name`)
 ) ENGINE=INNODB
 ROW_FORMAT=DEFAULT;
 
-CREATE TABLE `mydb`.`datacenter` (
+CREATE TABLE `inventory`.`datacenter` (
 `name` VARCHAR(20) NOT NULL,
 `address` VARCHAR(20),
 PRIMARY KEY (`name`)
 ) ENGINE=INNODB
 ROW_FORMAT=DEFAULT;
 
-CREATE TABLE `mydb`.`cabinet` (
+CREATE TABLE `inventory`.`cabinets` (
 `row` VARCHAR(20) NOT NULL,
 `column` VARCHAR(20) NOT NULL,
 `id` INT NOT NULL AUTO_INCREMENT,
@@ -122,7 +122,7 @@ PRIMARY KEY (`id`)
 ) ENGINE=INNODB
 ROW_FORMAT=DEFAULT;
 
-CREATE TABLE `mydb`.`models` (
+CREATE TABLE `inventory`.`models` (
 `id` INT NOT NULL AUTO_INCREMENT,
 `make` VARCHAR(20) NOT NULL,
 `model` VARCHAR(20) NOT NULL,
@@ -131,7 +131,7 @@ PRIMARY KEY (`id`)
 ) ENGINE=INNODB
 ROW_FORMAT=DEFAULT;
 
-CREATE TABLE `mydb`.`operating_systems` (
+CREATE TABLE `inventory`.`operating_systems` (
 `id` INT NOT NULL AUTO_INCREMENT,
 `name` VARCHAR(20) NOT NULL,
 `version` VARCHAR(20) NOT NULL,
@@ -139,7 +139,7 @@ PRIMARY KEY (`id`)
 ) ENGINE=INNODB
 ROW_FORMAT=DEFAULT;
 
-CREATE TABLE `mydb`.`network_addresses` (
+CREATE TABLE `inventory`.`network_addresses` (
 `ip_address` VARCHAR(20) NOT NULL,
 `fqdn` VARCHAR(20),
 `interface` VARCHAR(20) COMMENT 'Such as production, backup, lights out management interface.',
@@ -148,9 +148,9 @@ PRIMARY KEY (`ip_address`)
 ) ENGINE=INNODB
 ROW_FORMAT=DEFAULT;
 
-CREATE TABLE `mydb`.`comments` (
+CREATE TABLE `inventory`.`comments` (
 `id` INT NOT NULL AUTO_INCREMENT,
-`date` DATETIME NOT NULL DEFAULT now(),
+`date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 `comment` MEDIUMTEXT NOT NULL,
 `hostname` VARCHAR(20) NOT NULL,
 `admin` VARCHAR(20) NOT NULL,
@@ -158,36 +158,36 @@ PRIMARY KEY (`id`)
 ) ENGINE=INNODB
 ROW_FORMAT=DEFAULT;
 
-ALTER TABLE `mydb`.`cabinet` ADD UNIQUE `unique_row_column_datacenter` (`row`,`column`,`datacenter_name`);
+ALTER TABLE `inventory`.`cabinets` ADD UNIQUE `unique_row_column_datacenter` (`row`,`column`,`datacenter_name`);
 
-ALTER TABLE `mydb`.`systems` ADD CONSTRAINT `fk_systemRelationship11` FOREIGN KEY (`type`) REFERENCES `mydb`.`types`(`type`) MATCH SIMPLE ON UPDATE RESTRICT ON DELETE RESTRICT;
+ALTER TABLE `inventory`.`systems` ADD CONSTRAINT `fk_systemRelationship11` FOREIGN KEY (`type`) REFERENCES `inventory`.`types`(`type`) MATCH SIMPLE ON UPDATE RESTRICT ON DELETE RESTRICT;
 
-ALTER TABLE `mydb`.`systems` ADD CONSTRAINT `fk_systemsRelationship26` FOREIGN KEY (`os_id`) REFERENCES `mydb`.`operating_systems`(`id`) MATCH SIMPLE ON UPDATE RESTRICT ON DELETE RESTRICT;
+ALTER TABLE `inventory`.`systems` ADD CONSTRAINT `fk_systemsRelationship26` FOREIGN KEY (`os_id`) REFERENCES `inventory`.`operating_systems`(`id`) MATCH SIMPLE ON UPDATE RESTRICT ON DELETE RESTRICT;
 
-ALTER TABLE `mydb`.`physical_systems` ADD CONSTRAINT `fk_Physical SystemRelationship6` FOREIGN KEY (`hostname`) REFERENCES `mydb`.`systems`(`hostname`) MATCH SIMPLE ON UPDATE RESTRICT ON DELETE RESTRICT;
+ALTER TABLE `inventory`.`physical_systems` ADD CONSTRAINT `fk_Physical SystemRelationship6` FOREIGN KEY (`hostname`) REFERENCES `inventory`.`systems`(`hostname`) MATCH SIMPLE ON UPDATE RESTRICT ON DELETE RESTRICT;
 
-ALTER TABLE `mydb`.`physical_systems` ADD CONSTRAINT `fk_physical_systemsRelationship24` FOREIGN KEY (`cabinet_id`) REFERENCES `mydb`.`cabinet`(`id`) MATCH SIMPLE ON UPDATE RESTRICT ON DELETE RESTRICT;
+ALTER TABLE `inventory`.`physical_systems` ADD CONSTRAINT `fk_physical_systemsRelationship24` FOREIGN KEY (`cabinet_id`) REFERENCES `inventory`.`cabinets`(`id`) MATCH SIMPLE ON UPDATE RESTRICT ON DELETE RESTRICT;
 
-ALTER TABLE `mydb`.`physical_systems` ADD CONSTRAINT `fk_physical_systemsRelationship25` FOREIGN KEY (`model_id`) REFERENCES `mydb`.`models`(`id`) MATCH SIMPLE ON UPDATE RESTRICT ON DELETE RESTRICT;
+ALTER TABLE `inventory`.`physical_systems` ADD CONSTRAINT `fk_physical_systemsRelationship25` FOREIGN KEY (`model_id`) REFERENCES `inventory`.`models`(`id`) MATCH SIMPLE ON UPDATE RESTRICT ON DELETE RESTRICT;
 
-ALTER TABLE `mydb`.`virtual_systems` ADD CONSTRAINT `fk_Virtual SystemRelationship8` FOREIGN KEY (`hostname`) REFERENCES `mydb`.`systems`(`hostname`) MATCH SIMPLE ON UPDATE RESTRICT ON DELETE RESTRICT;
+ALTER TABLE `inventory`.`virtual_systems` ADD CONSTRAINT `fk_Virtual SystemRelationship8` FOREIGN KEY (`hostname`) REFERENCES `inventory`.`systems`(`hostname`) MATCH SIMPLE ON UPDATE RESTRICT ON DELETE RESTRICT;
 
-ALTER TABLE `mydb`.`virtual_systems` ADD CONSTRAINT `fk_virtual_systemRelationship12` FOREIGN KEY (`physical_system_hostname`) REFERENCES `mydb`.`physical_systems`(`hostname`) MATCH SIMPLE ON UPDATE RESTRICT ON DELETE RESTRICT;
+ALTER TABLE `inventory`.`virtual_systems` ADD CONSTRAINT `fk_virtual_systemRelationship12` FOREIGN KEY (`physical_system_hostname`) REFERENCES `inventory`.`physical_systems`(`hostname`) MATCH SIMPLE ON UPDATE RESTRICT ON DELETE RESTRICT;
 
-ALTER TABLE `mydb`.`projects` ADD CONSTRAINT `fk_projectRelationship18` FOREIGN KEY (`customer_name`) REFERENCES `mydb`.`customers`(`name`) MATCH SIMPLE ON UPDATE RESTRICT ON DELETE RESTRICT;
+ALTER TABLE `inventory`.`projects` ADD CONSTRAINT `fk_projectRelationship18` FOREIGN KEY (`customer_name`) REFERENCES `inventory`.`customers`(`name`) MATCH SIMPLE ON UPDATE RESTRICT ON DELETE RESTRICT;
 
-ALTER TABLE `mydb`.`systems_projects` ADD CONSTRAINT `fk_system_projectsRelationship15` FOREIGN KEY (`hostname`) REFERENCES `mydb`.`systems`(`hostname`) MATCH SIMPLE ON UPDATE RESTRICT ON DELETE RESTRICT;
+ALTER TABLE `inventory`.`systems_projects` ADD CONSTRAINT `fk_system_projectsRelationship15` FOREIGN KEY (`hostname`) REFERENCES `inventory`.`systems`(`hostname`) MATCH SIMPLE ON UPDATE RESTRICT ON DELETE RESTRICT;
 
-ALTER TABLE `mydb`.`systems_projects` ADD CONSTRAINT `fk_system_projectsRelationship16` FOREIGN KEY (`project_name`) REFERENCES `mydb`.`projects`(`name`) MATCH SIMPLE ON UPDATE RESTRICT ON DELETE RESTRICT;
+ALTER TABLE `inventory`.`systems_projects` ADD CONSTRAINT `fk_system_projectsRelationship16` FOREIGN KEY (`project_name`) REFERENCES `inventory`.`projects`(`name`) MATCH SIMPLE ON UPDATE RESTRICT ON DELETE RESTRICT;
 
-ALTER TABLE `mydb`.`administrators_projects` ADD CONSTRAINT `fk_administrators_projectsRelationship20` FOREIGN KEY (`administrator_username`) REFERENCES `mydb`.`administrators`(`username`) MATCH SIMPLE ON UPDATE RESTRICT ON DELETE RESTRICT;
+ALTER TABLE `inventory`.`administrators_projects` ADD CONSTRAINT `fk_administrators_projectsRelationship20` FOREIGN KEY (`administrator_username`) REFERENCES `inventory`.`administrators`(`username`) MATCH SIMPLE ON UPDATE RESTRICT ON DELETE RESTRICT;
 
-ALTER TABLE `mydb`.`administrators_projects` ADD CONSTRAINT `fk_administrators_projectsRelationship21` FOREIGN KEY (`project_name`) REFERENCES `mydb`.`projects`(`name`) MATCH SIMPLE ON UPDATE RESTRICT ON DELETE RESTRICT;
+ALTER TABLE `inventory`.`administrators_projects` ADD CONSTRAINT `fk_administrators_projectsRelationship21` FOREIGN KEY (`project_name`) REFERENCES `inventory`.`projects`(`name`) MATCH SIMPLE ON UPDATE RESTRICT ON DELETE RESTRICT;
 
-ALTER TABLE `mydb`.`cabinet` ADD CONSTRAINT `fk_cabinetRelationship23` FOREIGN KEY (`datacenter_name`) REFERENCES `mydb`.`datacenter`(`name`) MATCH SIMPLE ON UPDATE RESTRICT ON DELETE RESTRICT;
+ALTER TABLE `inventory`.`cabinets` ADD CONSTRAINT `fk_cabinetRelationship23` FOREIGN KEY (`datacenter_name`) REFERENCES `inventory`.`datacenter`(`name`) MATCH SIMPLE ON UPDATE RESTRICT ON DELETE RESTRICT;
 
-ALTER TABLE `mydb`.`network_addresses` ADD CONSTRAINT `fk_network_addressesRelationship27` FOREIGN KEY (`system_hostname`) REFERENCES `mydb`.`systems`(`hostname`) MATCH SIMPLE ON UPDATE RESTRICT ON DELETE RESTRICT;
+ALTER TABLE `inventory`.`network_addresses` ADD CONSTRAINT `fk_network_addressesRelationship27` FOREIGN KEY (`system_hostname`) REFERENCES `inventory`.`systems`(`hostname`) MATCH SIMPLE ON UPDATE RESTRICT ON DELETE RESTRICT;
 
-ALTER TABLE `mydb`.`comments` ADD CONSTRAINT `fk_commentsRelationship28` FOREIGN KEY (`hostname`) REFERENCES `mydb`.`systems`(`hostname`) MATCH SIMPLE ON UPDATE RESTRICT ON DELETE RESTRICT;
+ALTER TABLE `inventory`.`comments` ADD CONSTRAINT `fk_commentsRelationship28` FOREIGN KEY (`hostname`) REFERENCES `inventory`.`systems`(`hostname`) MATCH SIMPLE ON UPDATE RESTRICT ON DELETE RESTRICT;
 
-ALTER TABLE `mydb`.`comments` ADD CONSTRAINT `fk_commentsRelationship29` FOREIGN KEY (`admin`) REFERENCES `mydb`.`administrators`(`username`) MATCH SIMPLE ON UPDATE RESTRICT ON DELETE RESTRICT;
+ALTER TABLE `inventory`.`comments` ADD CONSTRAINT `fk_commentsRelationship29` FOREIGN KEY (`admin`) REFERENCES `inventory`.`administrators`(`username`) MATCH SIMPLE ON UPDATE RESTRICT ON DELETE RESTRICT;
