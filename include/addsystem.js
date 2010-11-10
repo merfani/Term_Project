@@ -4,6 +4,20 @@ $(document).ready(function() {
     });
 
     $("#addos").click(function() {
-        $("#ostd").html('Name <input type="text" name="osname"/> Version <input type="text" name="osversion" />');
+        $("#ostd").html('Name <input type="text" size="14" name="osname"/> Version <input type="text" size="5" name="osversion" />');
+    });
+
+    $("#physical").click(function() {
+        $.ajax({url: "getsystemdetails.php?type=physical", success: function(data) {
+            $(".systemdetails").remove();
+            $("#formtable").append(data);
+        }});
+    });
+
+    $("#virtual").click(function() {
+        $.ajax({url: "getsystemdetails.php?type=virtual", success: function(data) {
+            $(".systemdetails").remove();
+            $("#formtable").append(data);
+        }});
     });
 });

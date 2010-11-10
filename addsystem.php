@@ -16,6 +16,12 @@ $osname = "";
 $osversion = "";
 $oserror = "";
 
+$virtualization = "";
+$virtualizationerror = "";
+
+$serialnumber = "";
+$serialnumbererror = "";
+
 if (isset($_REQUEST["action"]) && $_REQUEST["action"] == "post") {
     $error = false;
 
@@ -78,6 +84,24 @@ if (isset($_REQUEST["action"]) && $_REQUEST["action"] == "post") {
             $os = $row["id"];
     }
 
+    if (isset($_REQUEST["virtualization"]))
+        $virtualization = $_REQUEST["virtualization"];
+
+    if ($virtualization != "physical" && $virtualization != "virtual") {
+        $virtualizationerror = "Required.";
+        $error = true;
+    }
+
+    if ($virtualization == "physical") {
+        if (isset($_REQUEST["serialnumber"]))
+            $serialnumber = $_REQUEST["serialnumber"];
+
+        if (strlen($serialnumber) == 0) {
+            $serialnumbererror = "Required.";
+            $error = true;
+        }
+    }
+
     if (!$error) {
         if (strlen($os) == 0) {
             $query = sprintf("INSERT INTO operating_systems (name, version) VALUES ('%s', '%s')",
@@ -105,7 +129,7 @@ include("include/header.inc");
 ?>
 
 <form method="post" action="addsystem.php">
-    <table class="formtable">
+    <table id="formtable" class="formtable">
         <tr><td colspan="2"><div class="formtitle">Add System</div></td></tr>
     
         <tr>
@@ -123,7 +147,7 @@ include("include/header.inc");
             <td id="typetd">
                 <?php
                 $types = gettypes();
-                if (count($types) == 0) {
+                if (count($types) == 0 || strlen($type) != 0) {
                     echo "<input type=\"text\" name=\"type\" value=\"$type\" />\n";
                 } else {
                     echo "<select name=\"type\">\n";
@@ -131,7 +155,7 @@ include("include/header.inc");
                         echo "<option" . ($type == $t ? " selected=\"selected\"" : "") . ">$t</option>\n";
                     }
                     echo "</select>\n";
-                    echo "<a id=\"addtype\" href=\"javascript:void()\">New...</a>\n";
+                    echo "<a id=\"addtype\" href=\"javascript:void(0)\">New...</a>\n";
                 }
                 echo $typeerror;
                 ?>
@@ -143,21 +167,37 @@ include("include/header.inc");
             <td id="ostd">
                 <?php
                 $oses = getoses();
-                if (count($oses) == 0) {
-                    echo "Name <input type=\"text\" name=\"osname\" value=\"$osname\" />\n";
-                    echo "Version <input type=\"text\" name=\"osversion\" value=\"$osversion\" />\n";
+                if (count($oses) == 0 || strlen($osname) != 0 || strlen($osversion) != 0) {
+                    echo "Name <input type=\"text\" size=\"14\" name=\"osname\" value=\"$osname\" />\n";
+                    echo "Version <input type=\"text\" size=\"5\" name=\"osversion\" value=\"$osversion\" />\n";
                 } else {
                     echo "<select name=\"os\">\n";
                     foreach ($oses as $osid => $o) {
                         echo "<option" . ($os == $osid ? " selected=\"selected\"" : "") . " value=\"$osid\">$o</option>\n";
                     }
                     echo "</select>\n";
-                    echo "<a id=\"addos\" href=\"javascript:void()\">New...</a>\n";
+                    echo "<a id=\"addos\" href=\"javascript:void(0);\">New...</a>\n";
                 }
                 echo $oserror;
                 ?>
             </td>
         </tr>
+
+        <tr>
+            <td>Virtualization</td>
+            <td>
+                <input id="physical" type="radio" name="virtualization" value="physical" <?php if ($virtualization == "physical") echo "checked=\"checked\"" ?>>Physical</input>
+                <input id="virtual" type="radio" name="virtualization" value="virtual" <?php if ($virtualization == "virtual") echo "checked=\"checked\"" ?>>Virtual</input>
+                <?php echo $virtualizationerror ?>
+            </td>
+        </tr>
+        
+        <?php
+        if ($virtualization == "physical")
+            echo getphysicalhtml($serialnumber, $serialnumbererror);
+        else if ($virtualization == "virtual")
+            echo getvirtualhtml();
+        ?>
     </table>
     <div class="formsubmit">
         <input type="hidden" name="action" value="post" />
