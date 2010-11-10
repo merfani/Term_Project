@@ -8,14 +8,14 @@ $(document).ready(function() {
     });
 
     $("#physical").click(function() {
-        $.ajax({url: "getsystemdetails.php?type=physical", success: function(data) {
+        $.ajax({url: "ajax/getsystemdetails.php?type=physical", success: function(data) {
             $(".systemdetails").remove();
             $("#formtable").append(data);
         }});
     });
 
     $("#virtual").click(function() {
-        $.ajax({url: "getsystemdetails.php?type=virtual", success: function(data) {
+        $.ajax({url: "ajax/getsystemdetails.php?type=virtual", success: function(data) {
             $(".systemdetails").remove();
             $("#formtable").append(data);
         }});

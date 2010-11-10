@@ -1,6 +1,6 @@
 <?php
-include("include/connectdb.inc");
-include("include/utils.inc");
+include("../include/connectdb.inc");
+include("../include/utils.inc");
 
 if ($_REQUEST["type"] == "physical")
     echo getphysicalhtml();
