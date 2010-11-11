@@ -19,5 +19,7 @@
 <!--            <div id="logo">System Inventory</div><br />-->
             <span id="menu">
                 <a href="addsystem.php">Add System</a><br />
-            </span>
+                <a href= "browsesystem.php">Browse Systems</a><br>  
+          </span>
+  
             <div id="content">
