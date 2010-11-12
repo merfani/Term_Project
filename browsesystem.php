@@ -5,7 +5,7 @@ include("include/utils.inc");
 
 $title = "Browse System";
 $javascript = "include/addsystem.js";
-
+    
 $types = "";
 
 if (isset($_REQUEST["server_type"])){
@@ -18,7 +18,6 @@ else{
 }
 
 
-echo "<h1>NUMTYPES: $num_types</h1>";
 
 if (isset($_REQUEST["os_type"])){
     $os = $_REQUEST["os_type"];
@@ -29,9 +28,20 @@ else{
     $num_os = 0; 
 }
 
+if (isset($_REQUEST["results_limit"])){
+    $display_limit=$_REQUEST["results_limit"];
+}
+else{
+    $display_limit=25;
+}
 
+
+$display_index=0;
 include("include/header.inc");
 ?>
+
+<table id="mainTable" class="browseTableStyle">
+<tr><td>
 
 <form method="post" action="browsesystem.php">
 <table id="displayTable" class="formtable">
@@ -60,7 +70,7 @@ include("include/header.inc");
                 
          ?>
      </td>
-        <td id="ostd">
+     <td id="ostd">
             <div>OS</div>    
             <?php
                 $oses = getoses();
@@ -70,66 +80,91 @@ include("include/header.inc");
                     echo "<option>$t</option>\n";
                 }
                 echo "</select>\n";
+           ?>
+    </td>
+    <td>
 
-               
-                ?>
-            </td>
-
+        <input type="radio" name="results_limit" value="25" <?php if($display_limit == 25){echo "checked";} ?>/>25<br />
+        <input type="radio" name="results_limit" value="50" <?php if($display_limit == 50){echo "checked";} ?>/>50<br />
+        <input type="radio" name="results_limit" value="100" <?php if($display_limit == 100){echo "checked";} ?>/>100<br />
+    
+    </td> 
     <td>
         <input type="submit" value="search">
     </td>
 </tr>
 </table>
+</form>
+</td></tr> 
 
 <?php
 
 if($num_types != 0){
+   
     
-    echo "Displaying Results<br>";
-    echo "<table id=resultsTable class=\"formtable\">";
 
-    //escape each element of the array
-  /* $arr = array();
-
-    $i=0;
-    //get the number of selected types
-    foreach ($type as $t){
-        if($t == "on"){
-            array_push($arr, $types[$i]);
-        }
-        $i++;
-    } 
-    */
-
-    $type_mysql = "type='" . implode("' or type='", $type) . "'";
+   $type_mysql = "systems.type='" . implode("' or systems.type='", $type) . "'";
  
-
-    $query = "SELECT * from systems where $type_mysql";
+    $order_field = "Hostname";
+    $order_direction = "asc";
+    $upper_limit= $display_index + $display_limit;
+    $query = "SELECT SQL_CALC_FOUND_ROWS systems.hostname as Hostname,
+                                         systems.description as Description,
+                                         systems.type as Type,
+                                         operating_systems.name as OS,
+                                         operating_systems.version as Version
+                 from systems JOIN operating_systems ON (systems.os_id=operating_systems.id)
+                        where $type_mysql order by $order_field $order_direction
+         limit $display_index, $upper_limit";
 
     echo "QUERY: $query";
 
     $result = mysql_query($query);
 
-    echo "<tr><td>Hostname</td><td>Description</td><td>Type</td><td>OS ID</td></tr>";
+    $num_rows = mysql_num_rows($result);
 
-    while($row = mysql_fetch_array($result)){
+    $num_result = mysql_query("SELECT FOUND_ROWS()");
+
+    $total_num_rows = mysql_result($num_result, 0);    
+
+    $start_index=$display_index+1;
+    $end_index=$display_index+$num_rows;
+
+   echo "<tr><td>";
+    echo "<table id=\"results\" cellpadding=\"3\" cellspacing=\"0\" border=\"1\" class=\"resultstyle\">";
+    echo "Displaying $start_index-$end_index from a total of  $total_num_rows results";
+ 
+    
+ 
+    echo "<tr id=\"resultFields\">";
+    while( $property = mysql_fetch_field($result) ){
+        echo "<td><b>$property->name</b></td>";
+    }
+    echo "<td />"; 
+    echo "</tr>";
+     while($row = mysql_fetch_array($result)){
         echo "<tr>";
-        $hostname       =   $row['hostname'];
-        $description    =   $row['description'];
-        $type           =   $row['type'];
-        $os_id          =   $row['os_id'];
+        $hostname       =   $row['Hostname'];        
+        $description    =   $row['Description'];
+        $type           =   $row['Type'];
+        $os_id          =   $row['OS'];
+        $version        =   $row['Version'];
         echo "<td>$hostname</td>";
         echo "<td>$description</td>";
         echo "<td>$type</td>";
         echo "<td>$os_id</td>";
-        echo "</tr>";
+        echo "<td>$version</td>";
+        echo "<td><a href=\"\">+</a></td></tr>";
+
+
     }
    
-     echo "</table>";
+     echo "</td></tr></table></tr>";
 
    
     mysql_free_result($result);
 }
 
 ?>
+</table>
 <?php include("include/footer.inc"); ?>

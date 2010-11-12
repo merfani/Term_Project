@@ -20,6 +20,23 @@ form {
     margin: 0px;
 }
 
+.browseTableStyle {
+	width: 100%;
+
+}
+
+.resultstyle {
+    width: 100%;
+}
+
+#resultFields{
+	background-color: #e0e0f4;
+ 
+}
+
+.resultstyle td{
+}
+
 .formtable {
     border: 1px dotted #666666;
     margin: auto auto 10px auto;
