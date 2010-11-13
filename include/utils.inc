@@ -19,6 +19,28 @@ function getoses() {
     return $oses;
 }
 
+function getos() {
+    $result = mysql_query("SELECT name FROM operating_systems");
+
+    $oses = array();
+    while ($row = mysql_fetch_assoc($result))
+        array_push($oses, $row["name"]);
+
+    return $oses;
+}
+
+function getversion() {
+    $result = mysql_query("SELECT version FROM operating_systems");
+
+    $versions = array();
+    while ($row = mysql_fetch_assoc($result))
+        array_push($versions, $row["version"]);
+
+    return $versions;
+}
+
+
+
 function getphysicalsystems() {
     $result = mysql_query("SELECT hostname FROM physical_systems");
 
