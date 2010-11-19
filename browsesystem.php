@@ -25,10 +25,12 @@ function removeNotSpecified(&$array){
 }
 
 
-
 $title = "Browse System";
 $javascript = "include/addsystem.js";
-    
+   
+
+$show_results=0;
+ 
 $types = "";
 
 if (isset($_REQUEST["server_type"])){
@@ -66,6 +68,29 @@ if (isset($_REQUEST["start_index"])){
 }else{
 
     $display_index=0;
+}
+
+if (isset($_REQUEST["order_field"])){
+$order_field=$_REQUEST["order_field"];
+}else{
+	$order_field="Hostname";
+}
+
+if (isset($_REQUEST["order_direction"])){
+	$order_direction=$_REQUEST["order_direction"];
+}else{
+	$order_direction="asc";
+}
+
+
+
+if (isset($_REQUEST["first_load"])){
+	$show_results=$_REQUEST["first_load"];	
+}
+
+if (isset($_REQUEST["submitbutton"])){
+	$display_index=0;
+	$show_results=1;
 }
 
 
@@ -123,14 +148,18 @@ include("include/header.inc");
     </td>
     <td>
 
+    
         <input type="radio" name="results_limit" value="25" <?php if($display_limit == 25){echo "checked";} ?>/>25<br />
         <input type="radio" name="results_limit" value="50" <?php if($display_limit == 50){echo "checked";} ?>/>50<br />
         <input type="radio" name="results_limit" value="100" <?php if($display_limit == 100){echo "checked";} ?>/>100<br />
     
     </td> 
     <td>
-        <input type="hidden" name="start_index" value="0">
-        <input type="submit" value="search">
+	<input type="hidden" name="first_load" value="<?php echo "$show_results"; ?>">
+        <input type="hidden" name="order_direction" value="<?php echo "$order_direction"; ?>">
+        <input type="hidden" name="order_field" value="<?php echo "$order_field"; ?>"> 
+        <input type="hidden" name="start_index" value="<?php echo "$display_index"; ?>">
+        <input type="submit" name="submitbutton" value="search">
     </td>
 </tr>
 </table>
@@ -142,10 +171,32 @@ include("include/header.inc");
         document.myform["start_index"].value = newStart;
         document.myform.submit();
     }
+
+    function submitorder(order){
+      
+        var currOrder = document.myform["order_field"].value;
+        
+        if(currOrder == order){
+            var currDir = document.myform["order_direction"].value;
+	    	if(currDir == "asc"){
+			document.myform["order_direction"].value = "desc";
+		}else{
+			document.myform["order_direction"].value = "asc";
+		}
+        }else{
+            document.myform["order_field"].value = order;
+            document.myform["order_direction"].value = "asc";
+        }
+       
+	document.myform.submit();  
+  } 
+
+
 </script>
 
 <?php
 
+    if($show_results == 1){
     if($num_types != 0){
         $type_mysql = "systems.type='" . implode("' or systems.type='", $type) . "'";
     }else{
@@ -158,8 +209,6 @@ include("include/header.inc");
         $type_os = "operating_systems.name IS NOT NULL";
     }
 
-    $order_field = "Hostname";
-    $order_direction = "asc";
     $upper_limit= $display_index + $display_limit;
     $query = "SELECT SQL_CALC_FOUND_ROWS systems.hostname as Hostname,
                                          systems.description as Description,
@@ -170,7 +219,7 @@ include("include/header.inc");
                         where (($type_mysql) AND ($type_os)) order by $order_field $order_direction
          limit $display_index, $upper_limit";
 
-   # echo "QUERY: $query";
+    #echo "QUERY: $query";
 
     $result = mysql_query($query);
 
@@ -212,7 +261,7 @@ include("include/header.inc");
  
     echo "<tr id=\"resultFields\">";
     while( $property = mysql_fetch_field($result) ){
-        echo "<td><b>$property->name</b></td>";
+        echo "<td><b><a href =\"javascript: submitorder('$property->name')\">$property->name</a></b></td>";
     }
     echo "<td />"; #fill in corner square 
     echo "</tr>";
@@ -243,7 +292,7 @@ include("include/header.inc");
    }
     mysql_free_result($result);
 
-
+   }
 ?>
 </table>
 <?php include("include/footer.inc"); ?>
