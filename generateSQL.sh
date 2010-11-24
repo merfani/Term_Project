@@ -6,10 +6,10 @@ i=1
 SQL_FILE=populater.sql
 
 
-rm $SQL_FILE
+if [ -e $SQL_FILE ]; then rm $SQL_FILE; fi
 
-#echo "drop database inventory;" >> $SQL_FILE 
-echo "create database inventory;" >> $SQL_FILE
+echo "drop database IF EXISTS  inventory;" >> $SQL_FILE 
+echo "create database IF NOT EXISTS inventory;" >> $SQL_FILE
 cat schema.sql >> $SQL_FILE
 
 
@@ -38,6 +38,24 @@ i=$((i+1))
 
 done
 
+i=0
+
+#=====================
+#add administrators
+
+NUM_ADMINS=50
+
+while [ $i -lt $NUM_ADMINS ]; do
+
+echo "insert into datacenter VALUES(\"datacenter$i\", \"dc_address$i\");" >> $SQL_FILE
+echo "insert into cabinets(\`row\`, \`column\`, datacenter_name) VALUES(\"rack_row$i\", \"rack_column$i\", \"datacenter$i\" );" >> $SQL_FILE
+echo "insert into customers VALUES(\"customer_name$i\", \"cust@email$i.com\");" >> $SQL_FILE
+echo "insert into projects VALUES(\"project_name$i\", \"customer_name$i\");" >> $SQL_FILE
+echo "insert into administrators VALUES(\"username$i\", \"name$i\");" >> $SQL_FILE
+echo "insert into administrators_projects VALUES(\"username$i\", \"project_name$i\", \"role$i\");" >> $SQL_FILE
+i=$((i+1))
+
+done
 
 
 

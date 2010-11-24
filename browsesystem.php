@@ -167,7 +167,14 @@ include("include/header.inc");
 </td></tr> 
 
 <script type="text/javascript">
-    function submitform(newStart){
+   
+    function submitCall(){
+       
+       var val =  document.myform["start_index"];
+       alert("submitting:" +val);
+	 document.myform.submit();
+    }
+     function submitform(newStart){
         document.myform["start_index"].value = newStart;
         document.myform.submit();
     }
@@ -191,6 +198,11 @@ include("include/header.inc");
 	document.myform.submit();  
   } 
 
+	// Popup window code
+	function newPopup(url) {
+		popupWindow = window.open(
+		url,'popUpWindow','height=400,width=600,left=10,top=10,resizable=yes,scrollbars=yes,toolbar=no,menubar=no,location=no,directories=no,status=yes');
+}
 
 </script>
 
@@ -280,7 +292,7 @@ include("include/header.inc");
         echo "<td>$type</td>";
         echo "<td>$os_id</td>";
         echo "<td>$version</td>";
-        echo "<td><a href=\"\">+</a></td>";
+        echo "<td><a href=\"Javascript:newPopup('entryinfo.php?hostname=$hostname');\">+</a></td>";
         echo "</tr>";
 
 
