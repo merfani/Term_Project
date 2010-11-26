@@ -54,7 +54,8 @@ function displaySystem($hostname){
 }
 
 function displayPhysicalHost($hostname){
-$query="SELECT * from physical_systems where hostname='$hostname'";
+
+	$query="SELECT physical_systems.serial_number as serial, physical_systems.cabinet_position as position, physical_systems.asset_tag as tag, cabinets.row as rack_row, cabinets.column as rack_column, cabinets.datacenter_name as datacenter from physical_systems Left Join cabinets ON (physical_systems.cabinet_id=cabinets.id) where hostname='$hostname'";
 
 $result=mysql_query($query);
 
@@ -63,24 +64,71 @@ if($row = mysql_fetch_array($result)){
 	echo "<br><br>";
 echo "<table id=\"infotable\" cellpadding=\"3\" cellspacing=\"0\" border=\"1\">";
    
-	$serial_number	= $row['serial_number'];
-	$cabinet_id	= $row['cabinet_id'];
-	$cabinet_position = $row['cabinet_position'];
-	$model_id	= $row['model_id'];
- 	$asset_tag	= $row['asset_tag'];	
+	$serial_number	= $row['serial'];
+	$cabinet_position = $row['position'];
+ 	$asset_tag	= $row['tag'];	
+	$cab_row = $row['rack_row'];
+	$cab_col = $row['rack_column'];
+	$datacenter = $row['datacenter'];	
 
 	echo "<tr><td class=\"headerinfocell\" colspan=2>Physical Host</td><tr>";	
 	echo "<tr><td class=\"leftInfoCell\">Serial Number</td><td>$serial_number</td></tr>";
-	echo "<tr><td class=\"leftInfoCell\">Cabinet ID</td><td>$cabinet_id</td></tr>";
 	echo "<tr><td class=\"leftInfoCell\">Cabinent Position</td><td>$cabinet_position</td></tr>";
-	echo "<tr><td class=\"leftInfoCell\">Model ID</td><td>$model_id</td></tr>";
 	echo "<tr><td class=\"leftInfoCell\">Asset Tag</td><td>$asset_tag</td></tr>";
+	echo "<tr><td class=\"leftInfoCell\">Rack Location</td><td>$cab_row / $cab_col</td></tr>";
+	echo "<tr><td class=\"leftInfoCell\">Datacenter</td><td>$datacenter</td></tr>";
 	echo "</table>";
 }
 
 
 }
 
+function displayComments($hostname){
+
+	$query="SELECT * from comments where hostname='$hostname' order by comments.date desc";
+	$result=mysql_query($query);
+
+	echo "<br><br>";
+
+	echo "Comments<br>";
+	echo "<table id=\"infotable\" cellpadding=\"3\" cellspacing=\"0\" border=\"1\">";
+
+	while($row = mysql_fetch_array($result)){
+		$date = $row['date'];
+		$admin = $row['admin'];	
+		$comment = $row['comment'];
+		echo "<tr><td>$date - $admin</td><td>$comment</td></tr>";
+	}
+	echo "</table>";
+ 	
+
+}
+
+function displayProject($hostname){
+
+	$query="SELECT systems_projects.project_name as project_name, administrators_projects.administrator_username as admin, administrators_projects.role as role, projects.customer_name as customer_name from systems_projects JOIN projects ON (systems_projects.project_name=projects.name) LEFT JOIN administrators_projects ON (systems_projects.project_name=administrators_projects.project_name) where systems_projects.hostname='$hostname'";
+	$result=mysql_query($query);
+
+   	echo "<br><br>";	
+	echo "<table id=\"infotable\" cellpadding=\"2\" cellspacing=\"0\" border=\"1\">";
+ 	echo "<tr><td class=\"headerinfocell\" colspan=4>Associated Projects</td></tr>";
+	echo "<tr><td><b>Project Name</b></td><td><b>Customer</b></td><td><b>Admin</b></td><td><b>Role</b></td></tr>";
+	
+	
+	while($row=mysql_fetch_array($result)){
+		
+		$project_name= $row['project_name'];
+		$customer_name= $row['customer_name'];
+		$admin = $row['admin'];
+		$role = $row['role'];
+		echo "<tr><td>$project_name</td><td>$customer_name</td><td>$admin</td><td>$role</td></tr>";
+	
+	}
+
+	echo "</table>";	
+
+
+}
 
 
 function displayNetworkInfo($hostname){
@@ -112,6 +160,8 @@ function displayNetworkInfo($hostname){
 displaySystem($hostname);
 displayNetworkInfo($hostname);
 displayPhysicalHost($hostname);
+displayProject($hostname);
+displayComments($hostname);
 #if virtual get the physical host
 
 
