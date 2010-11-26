@@ -34,6 +34,17 @@ form {
  
 }
 
+td.leftinfocell{
+    background-color: #ebf4f4;
+    font-weight: bold;
+}
+
+td.headerinfocell{
+   background-color: #0000cc;
+    font-weight: bold;
+    color: #ffffff; 
+}
+
 .resultstyle td{
 }
 

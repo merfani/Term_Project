@@ -201,7 +201,7 @@ include("include/header.inc");
 	// Popup window code
 	function newPopup(url) {
 		popupWindow = window.open(
-		url,'popUpWindow','height=400,width=600,left=10,top=10,resizable=yes,scrollbars=yes,toolbar=no,menubar=no,location=no,directories=no,status=yes');
+		url,'popUpWindow','height=800,width=600,left=10,top=10,resizable=yes,scrollbars=yes,toolbar=no,menubar=no,location=no,directories=no,status=yes');
 }
 
 </script>
@@ -275,7 +275,6 @@ include("include/header.inc");
     while( $property = mysql_fetch_field($result) ){
         echo "<td><b><a href =\"javascript: submitorder('$property->name')\">$property->name</a></b></td>";
     }
-    echo "<td />"; #fill in corner square 
     echo "</tr>";
 
 
@@ -287,12 +286,13 @@ include("include/header.inc");
         $type           =   $row['Type'];
         $os_id          =   $row['OS'];
         $version        =   $row['Version'];
-        echo "<td>$hostname</td>";
+
+  	echo "<td><a href=\"Javascript:newPopup('entryinfo.php?hostname=$hostname');\">$hostname</a></td>";
         echo "<td>$description</td>";
         echo "<td>$type</td>";
         echo "<td>$os_id</td>";
         echo "<td>$version</td>";
-        echo "<td><a href=\"Javascript:newPopup('entryinfo.php?hostname=$hostname');\">+</a></td>";
+      
         echo "</tr>";
 
 
