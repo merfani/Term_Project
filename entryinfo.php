@@ -8,9 +8,32 @@
 <?php
 include("include/connectdb.inc");
 
+$hostname=$_REQUEST["hostname"];
 
-$hostname=$_GET["hostname"];
+if (isset($_REQUEST["comment"] )){
+
+	$newComment = $_REQUEST["comment"];
+	$username = $_REQUEST["adminList"];
+
+	echo "Comment \"$newComment\" added by $username";
+
+	$query=sprintf("INSERT into comments (`date`, `comment`, `hostname`, `admin`) VALUES(CURRENT_TIMESTAMP, '%s', '%s', '%s')", 
+	mysql_real_escape_string($newComment),
+	mysql_real_escape_string($hostname),
+	mysql_real_escape_string($username));
+
+
+	mysql_query($query);
+	
+}
+
+
+
+
 echo "<h1>$hostname</h1>";
+
+
+
 
 function displaySystem($hostname){
 
@@ -131,6 +154,36 @@ function displayProject($hostname){
 }
 
 
+function displayCommentBox($hostname){
+	
+	echo "<br><br>";
+	echo "<form method=\"post\" action=\"entryinfo.php\">";
+#	echo "Add Comment: <input type=\"text\" name=\"comment\" />";
+	echo "Add Comment<br><textarea name=\"comment\" cols=\"40\" rows=\"5\"></textarea>";		
+	echo "<br><select name=\"adminList\">";
+
+
+	$query = "SELECT administrators_projects.administrator_username as admin from administrators_projects JOIN systems_projects ON(administrators_projects.project_name=systems_projects.project_name) where systems_projects.hostname='$hostname' ";
+
+	
+	$result=mysql_query($query);
+
+	while($row=mysql_fetch_array($result)){
+
+		$admin_user= $row['admin'];
+		echo "<option>$admin_user</option>";
+		
+	}	
+	echo "</select>";
+	echo "<input type=\"hidden\" name=\"hostname\" value=\"$hostname\" />";	
+	echo "<input type=\"submit\" value=\"Submit\" />";
+	echo "</form>";
+
+
+
+
+}
+
 function displayNetworkInfo($hostname){
 
 	$query="SELECT * from network_addresses where system_hostname='$hostname'";
@@ -161,11 +214,12 @@ displaySystem($hostname);
 displayNetworkInfo($hostname);
 displayPhysicalHost($hostname);
 displayProject($hostname);
+displayCommentBox($hostname);
+
 displayComments($hostname);
 #if virtual get the physical host
 
 
 ?>
-
 
 </html>
