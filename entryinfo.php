@@ -15,8 +15,6 @@ if (isset($_REQUEST["comment"] )){
 	$newComment = $_REQUEST["comment"];
 	$username = $_REQUEST["adminList"];
 
-	echo "Comment \"$newComment\" added by $username";
-
 	$query=sprintf("INSERT into comments (`date`, `comment`, `hostname`, `admin`) VALUES(CURRENT_TIMESTAMP, '%s', '%s', '%s')", 
 	mysql_real_escape_string($newComment),
 	mysql_real_escape_string($hostname),

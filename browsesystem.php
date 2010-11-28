@@ -20,18 +20,11 @@ function removeNotSpecified(&$array){
             return;
         }
     }    
-       
         
 }
 
 
 $title = "Browse System";
-$javascript = "include/addsystem.js";
-   
-
-$show_results=0;
- 
-$types = "";
 
 $type = array();
 $num_types = 0;
@@ -78,7 +71,7 @@ if (isset($_REQUEST["order_direction"])){
 	$order_direction="asc";
 }
 
-
+$show_results=0;	#default, so it does not search first time
 
 if (isset($_REQUEST["first_load"])){
 	$show_results=$_REQUEST["first_load"];	
@@ -162,45 +155,7 @@ include("include/header.inc");
 </form>
 </td></tr> 
 
-<script type="text/javascript">
-   
-    function submitCall(){
-       
-       var val =  document.myform["start_index"];
-       alert("submitting:" +val);
-	 document.myform.submit();
-    }
-     function submitform(newStart){
-        document.myform["start_index"].value = newStart;
-        document.myform.submit();
-    }
-
-    function submitorder(order){
-      
-        var currOrder = document.myform["order_field"].value;
-        
-        if(currOrder == order){
-            var currDir = document.myform["order_direction"].value;
-	    	if(currDir == "asc"){
-			document.myform["order_direction"].value = "desc";
-		}else{
-			document.myform["order_direction"].value = "asc";
-		}
-        }else{
-            document.myform["order_field"].value = order;
-            document.myform["order_direction"].value = "asc";
-        }
-       
-	document.myform.submit();  
-  } 
-
-	// Popup window code
-	function newPopup(url) {
-		popupWindow = window.open(
-		url,'popUpWindow','height=800,width=600,left=10,top=10,resizable=yes,scrollbars=yes,toolbar=no,menubar=no,location=no,directories=no,status=yes');
-}
-
-</script>
+<script type="text/javascript" language="Javascript" src="include/browsesystem.js"></script>
 
 <?php
 
@@ -217,7 +172,6 @@ include("include/header.inc");
         $type_os = "operating_systems.name IS NOT NULL";
     }
 
-    $upper_limit= $display_index + $display_limit;
     $query = "SELECT SQL_CALC_FOUND_ROWS systems.hostname as Hostname,
                                          systems.description as Description,
                                          systems.type as Type,
@@ -225,11 +179,9 @@ include("include/header.inc");
                                          operating_systems.version as Version
                  from systems JOIN operating_systems ON (systems.os_id=operating_systems.id)
                         where (($type_mysql) AND ($type_os)) order by $order_field $order_direction
-         limit $display_index, $upper_limit";
+         limit $display_index, $display_limit";
 
-    #echo "QUERY: $query";
-
-    $result = mysql_query($query);
+      $result = mysql_query($query);
 
     $num_rows = mysql_num_rows($result);
 
@@ -241,30 +193,30 @@ include("include/header.inc");
     $end_index=$display_index+$num_rows;
     
     if($num_rows > 0){
-    echo "<tr><td>";
-    
-   echo "<table width=\"100%\"><tr><style type=\"text/css\"> td.jump {text-align: right}</style>";
-      
-     echo "<td>Displaying $start_index-$end_index from a total of  $total_num_rows results</td>";
-    
-     echo "<td class=\"jump\">";
+	
+	echo "<tr><td>";
+	echo "<table width=\"100%\"><tr><style type=\"text/css\"> td.jump {text-align: right}</style>";
+      	echo "<td>Displaying $start_index-$end_index from a total of  $total_num_rows results</td>";
+    	echo "<td class=\"jump\">";
         
-    if($display_index != 0){
-        $newIndex = $display_index - $display_limit;
-        echo "<a href=\"javascript: submitform($newIndex)\">Prev</a>"; 
-        if($end_index < $total_num_rows){echo "|";}
-    }
+	if($display_index != 0){
+     
+	   	$newIndex = $display_index - $display_limit;
+        	echo "<a href=\"javascript: submitform($newIndex)\">Prev</a>"; 
+        
+		if($end_index < $total_num_rows){echo "|";}
+    	}
    
-    if($end_index < $total_num_rows){
-        echo "<a href=\"javascript: submitform($end_index)\"> Next</a>";
-    }
-    echo "</td>";
-    echo "</tr></table>";
-
-
-    echo "</tr></td>";
-    echo "<tr><td>";
-     echo "<table id=\"results\" cellpadding=\"3\" cellspacing=\"0\" border=\"1\" class=\"resultstyle\">";
+	if($end_index < $total_num_rows){
+        	
+		echo "<a href=\"javascript: submitform($end_index)\"> Next</a>";
+    	}
+    
+	echo "</td>";
+    	echo "</tr></table>";
+	echo "</tr></td>";
+    	echo "<tr><td>";
+	echo "<table id=\"results\" cellpadding=\"3\" cellspacing=\"0\" border=\"1\" class=\"resultstyle\">";
     
  
     echo "<tr id=\"resultFields\">";
@@ -296,9 +248,12 @@ include("include/header.inc");
    
      echo "</table>";
      echo "</td></tr>";
-
+    echo "<tr><td>QUERY FOR DEMO PURPOSES: $query </td></tr>";
    }
-    mysql_free_result($result);
+    
+
+
+	mysql_free_result($result);
 
    }
 ?>
