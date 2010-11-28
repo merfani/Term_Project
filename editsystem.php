@@ -2,21 +2,43 @@
 include("include/connectdb.inc");
 include("include/utils.inc");
 
-$hostname = "";
-$hostnameerror = "";
+if (isset($_REQUEST["hostname"]))
+    $hostname = $_REQUEST["hostname"];
+else
+    die("Hostname required.");
 
-$description = "";
+$query = sprintf("SELECT * FROM systems WHERE hostname='%s'", mysql_real_escape_string($hostname));
+$result = mysql_query($query);
+
+if (!$row = mysql_fetch_assoc($result))
+    die("Invalid hostname.");
+
+$description = $row["description"];
 $descriptionerror = "";
 
-$type = "";
+$type = $row["type"];
 $typeerror = "";
 
-$os = "";
+$os = $row["os_id"];
 $osname = "";
 $osversion = "";
 $oserror = "";
 
-$virtualization = "";
+$query = sprintf("SELECT * FROM physical_systems INNER JOIN cabinets ON physical_systems.cabinet_id=cabinets.id WHERE hostname='%s'", mysql_real_escape_string($hostname));
+$result = mysql_query($query);
+
+if (!$row = mysql_fetch_assoc($result)) {
+    $query = sprintf("SELECT * FROM virtual_systems WHERE hostname='%s'", mysql_real_escape_string($hostname));
+    $result = mysql_query($query);
+
+    if (!$row = mysql_fetch_assoc($result))
+        die("Invalid virtualization type.");
+
+    $virtualization = "virtual";
+} else
+    $virtualization = "physical";
+
+$oldvirtualization = $virtualization;
 $virtualizationerror = "";
 
 $serialnumber = "";
@@ -47,189 +69,238 @@ $cabinetpositionerror = "";
 $host = "";
 $hosterror = "";
 
+if ($virtualization == "physical") {
+    $serialnumber = $row["serial_number"];
+    $assettag = $row["asset_tag"];
+    $model = $row["model_id"];
+    $datacenter = $row["datacenter_name"];
+    $cabinet = $row["cabinet_id"];
+    $cabinetposition = $row["cabinet_position"];
+} else {
+    $host = $row["physical_system_hostname"];
+}
+
 if (isset($_REQUEST["action"]) && $_REQUEST["action"] == "post") {
     $error = false;
 
-    if (isset($_REQUEST["hostname"]))
-        $hostname = $_REQUEST["hostname"];
-
-    # check that the hostname is valid
-    if (!preg_match("/[a-z][a-z0-9-]*/", $hostname)) {
-        $hostnameerror =  "Invalid hostname.";
-        $error = true;
-    }
-
-    # check that the system doesn't already exist
-    $query = sprintf("SELECT * FROM systems WHERE hostname='%s'", mysql_real_escape_string($hostname));
-    $result = mysql_query($query);
-    if (mysql_num_rows($result) != 0) {
-        $hostnameerror = "Hostname exists.";
-        $error = true;
-    }
-
+    $newdescription = "";
     if (isset($_REQUEST["description"]))
-        $description = $_REQUEST["description"];
+        $newdescription = $_REQUEST["description"];
 
     # check that the description is present
-    if (strlen($description) == 0) {
+    if (strlen($newdescription) == 0) {
         $descriptionerror = "Required.";
         $error = true;
-    }
+    } else
+        $description = $newdescription;
 
+    $newtype = "";
     if (isset($_REQUEST["type"]))
-        $type = $_REQUEST["type"];
+        $newtype = $_REQUEST["type"];
 
     # check that the type is present
-    if (strlen($type) == 0) {
+    if (strlen($newtype) == 0) {
         $typeerror = "Required.";
         $error = true;
-    }
+    } else
+        $type = $newtype;
 
+    $newos = "";
     if (isset($_REQUEST["os"]))
-        $os = $_REQUEST["os"];
+        $newos = $_REQUEST["os"];
 
+    $newosname = "";
     if (isset($_REQUEST["osname"]))
-        $osname = $_REQUEST["osname"];
-   
+        $newosname = $_REQUEST["osname"];
+  
+    $newosversion = ""; 
     if (isset($_REQUEST["osversion"]))
-        $osversion = $_REQUEST["osversion"];
+        $newosversion = $_REQUEST["osversion"];
 
-    if (strlen($os) == 0) {
-        if (strlen($osname) == 0 || strlen($osversion) == 0) {
+    if (strlen($newos) == 0) {
+        if (strlen($newosname) == 0 || strlen($newosversion) == 0) {
             $oserror = "Required.";
             $error = true;
+        } else {
+            $osname = $newosname;
+            $osverion = $newosversion;
         }
 
         $query = sprintf("SELECT id FROM operating_systems WHERE name='%s' AND version='%s'",
-            mysql_real_escape_string($osname),
-            mysql_real_escape_string($osversion));
+            mysql_real_escape_string($newosname),
+            mysql_real_escape_string($newosversion));
         $result = mysql_query($query);
 
         if ($row = mysql_fetch_assoc($result))
-            $os = $row["id"];
+            $newos = $row["id"];
+    } 
+    $os = $newos;
+
+    $newvirtualization = "";
+    if (isset($_REQUEST["virtualization"]))
+        $newvirtualization = $_REQUEST["virtualization"];
+
+    $is_hosting = false;
+    if ($oldvirtualization == "physical" && $newvirtualization == "virtual") {
+        $query = sprintf("SELECT hostname FROM virtual_systems WHERE physical_system_hostname='%s'", mysql_real_escape_string($hostname));
+        $result = mysql_query($query);
+        $is_hosting = mysql_num_rows($result) != 0;
     }
 
-    if (isset($_REQUEST["virtualization"]))
-        $virtualization = $_REQUEST["virtualization"];
-
-    if ($virtualization != "physical" && $virtualization != "virtual") {
+    if ($newvirtualization != "physical" && $newvirtualization != "virtual") {
         $virtualizationerror = "Required.";
         $error = true;
-    }
+    } else if ($is_hosting) {
+        $virtualizationerror = "This system hosts other systems.";
+        $error = true;
+    } else
+        $virtualization = $newvirtualization;
 
     if ($virtualization == "physical") {
+        $newmodel = "";
         if (isset($_REQUEST["model"]))
-            $model = $_REQUEST["model"];
+            $newmodel = $_REQUEST["model"];
 
+        $newmodelmake = "";
         if (isset($_REQUEST["modelmake"]))
-            $modelmake = $_REQUEST["modelmake"];
+            $newmodelmake = $_REQUEST["modelmake"];
 
+        $newmodelmodel = "";
         if (isset($_REQUEST["modelmodel"]))
-            $modelmodel = $_REQUEST["modelmodel"];
+            $newmodelmodel = $_REQUEST["modelmodel"];
 
+        $newmodelheight = "";
         if (isset($_REQUEST["modelheight"]))
-            $modelheight = $_REQUEST["modelheight"];
+            $newmodelheight = $_REQUEST["modelheight"];
 
-        if (strlen($model) == 0) {
-            if (!($modelheight > 0)) {
+        if (strlen($newmodel) == 0) {
+            if (!($newmodelheight > 0)) {
                 $modelerror = "Invalid height.";
                 $error = true;
-            }
+            } else 
+                $modelheight = $newmodelheight;
 
-            if (strlen($modelmake) == 0 || strlen($modelmodel) == 0 || strlen($modelheight) == 0) {
+            if (strlen($newmodelmake) == 0 || strlen($newmodelmodel) == 0 || strlen($newmodelheight) == 0) {
                 $modelerror = "Required.";
                 $error = true;
+            } else {
+                $modelmake = $newmodelmake;
+                $modelmodel = $newmodelmodel;
+                $modelheight = $newmodelheight;
             }
 
             $query = sprintf("SELECT id FROM models WHERE make='%s' AND model='%s'",
-                mysql_real_escape_string($modelmake),
-                mysql_real_escape_string($modelmodel));
+                mysql_real_escape_string($newmodelmake),
+                mysql_real_escape_string($newmodelmodel));
             $result = mysql_query($query);
 
             if ($row = mysql_fetch_assoc($result))
-                $model = $row["id"];
+                $newmodel = $row["id"];
         }
+        $model = $newmodel;
 
+        $newserialnumber = "";
         if (isset($_REQUEST["serialnumber"]))
-            $serialnumber = $_REQUEST["serialnumber"];
+            $newserialnumber = $_REQUEST["serialnumber"];
 
-        if (strlen($serialnumber) == 0) {
+        if (strlen($newserialnumber) == 0) {
             $serialnumbererror = "Required.";
             $error = true;
-        }
+        } else
+            $serialnumber = $newserialnumber;
 
+        $newassettag = "";
         if (isset($_REQUEST["assettag"]))
-            $assettag = $_REQUEST["assettag"];
+            $newassettag = $_REQUEST["assettag"];
 
-        if (strlen($assettag) == 0) {
+        if (strlen($newassettag) == 0) {
             $assettagerror = "Required.";
             $error = true;
-        }
+        } else
+            $assettag = $newassettag;
 
+        $newdatacenter = "";
         if (isset($_REQUEST["datacenter"]))
-            $datacenter = $_REQUEST["datacenter"];
+            $newdatacenter = $_REQUEST["datacenter"];
 
+        $newdatacentername = "";
         if (isset($_REQUEST["datacentername"]))
-            $datacentername = $_REQUEST["datacentername"];
+            $newdatacentername = $_REQUEST["datacentername"];
 
+        $newdatacenteraddress = "";
         if (isset($_REQUEST["datacenteraddress"]))
-            $datacenteraddress = $_REQUEST["datacenteraddress"];
+            $newdatacenteraddress = $_REQUEST["datacenteraddress"];
 
-        if (strlen($datacenter) == 0) {
-            if (strlen($datacentername) == 0 || strlen($datacenteraddress) == 0) {
+        if (strlen($newdatacenter) == 0) {
+            if (strlen($newdatacentername) == 0 || strlen($newdatacenteraddress) == 0) {
                 $datacentererror = "Required.";
                 $error = true;
+            } else { 
+                $datacentername = $newdatacentername;
+                $datacenteraddress = $newdatacenteraddress;
             }
 
-            $query = sprintf("SELECT name FROM datacenter WHERE name='%s'", mysql_real_escape_string($datacentername));
+            $query = sprintf("SELECT name FROM datacenter WHERE name='%s'", mysql_real_escape_string($newdatacentername));
             $result = mysql_query($query);
 
             if ($row = mysql_fetch_assoc($result))
-                $datacenter = $row["name"];
+                $newdatacenter = $row["name"];
         }
+        $datacenter = $newdatacenter;
 
+        $newcabinet = "";
         if (isset($_REQUEST["cabinet"]))
-            $cabinet = $_REQUEST["cabinet"];
+            $newcabinet = $_REQUEST["cabinet"];
 
+        $newcabinetrow = "";
         if (isset($_REQUEST["cabinetrow"]))
-            $cabinetrow = $_REQUEST["cabinetrow"];
+            $newcabinetrow = $_REQUEST["cabinetrow"];
 
+        $newcabinetcolumn = "";
         if (isset($_REQUEST["cabinetcolumn"]))
-            $cabinetcolumn = $_REQUEST["cabinetcolumn"];
+            $newcabinetcolumn = $_REQUEST["cabinetcolumn"];
 
-        if (strlen($cabinet) == 0) {
-            if (strlen($cabinetrow) == 0 || strlen($cabinetcolumn) == 0) {
+        if (strlen($newcabinet) == 0) {
+            if (strlen($newcabinetrow) == 0 || strlen($newcabinetcolumn) == 0) {
                 $cabineterror = "Required.";
                 $error = true;
+            } else {
+                $cabinetrow = $newcabinetrow;
+                $cabinetcolumn = $newcabinetcolumn;
             }
 
             $query = sprintf("SELECT id FROM cabinets WHERE `row`='%s' AND `column`='%s' AND datacenter_name='%s'",
-                mysql_real_escape_string($cabinetrow),
-                mysql_real_escape_string($cabinetcolumn),
+                mysql_real_escape_string($newcabinetrow),
+                mysql_real_escape_string($newcabinetcolumn),
                 mysql_real_escape_string($datacenter));
             $result = mysql_query($query);
 
             if ($row = mysql_fetch_assoc($result))
-                $cabinet = $row["id"];
+                $newcabinet = $row["id"];
         }
+        $cabinet = $newcabinet;
 
+        $newcabinetposition = 0;
         if (isset($_REQUEST["cabinetposition"]))
-            $cabinetposition = $_REQUEST["cabinetposition"];
+            $newcabinetposition = $_REQUEST["cabinetposition"];
 
-        if (!is_numeric($cabinetposition) || !($cabinetposition >= 0 && $cabinetposition <= 40)) {
+        if (!is_numeric($newcabinetposition) || !($newcabinetposition >= 0 && $newcabinetposition <= 40)) {
             $cabinetpositionerror = "Must be between 0 and 40.";
             $error = true;
-        }
+        } else
+            $cabinetposition = $newcabinetposition;
     }
 
     if ($virtualization == "virtual") {
+        $newhost = "";
         if (isset($_REQUEST["host"]))
-            $host = $_REQUEST["host"];
+            $newhost = $_REQUEST["host"];
 
-        if (strlen($host) == 0) {
+        if (strlen($newhost) == 0) {
             $hosterror = "Required.";
             $error = true;
-        }
+        } else
+            $host = $newhost;
     }
 
     if (!$error) {
@@ -244,12 +315,12 @@ if (isset($_REQUEST["action"]) && $_REQUEST["action"] == "post") {
         $query = sprintf("INSERT INTO types VALUES ('%s')", mysql_real_escape_string($type));
         mysql_query($query);
 
-        $query = sprintf("INSERT INTO systems VALUES ('%s', '%s', '%s', '%d')",
-            mysql_real_escape_string($hostname),
+        $query = sprintf("UPDATE systems SET description='%s', type='%s', os_id='%d' WHERE hostname='%s'",
             mysql_real_escape_string($description),
             mysql_real_escape_string($type),
-            mysql_real_escape_string($os));
-        mysql_query($query);
+            mysql_real_escape_string($os),
+            mysql_real_escape_string($hostname));
+        mysql_query($query) or die(mysql_error());
 
         if ($virtualization == "physical") {
             if (strlen($model) == 0) {
@@ -278,21 +349,45 @@ if (isset($_REQUEST["action"]) && $_REQUEST["action"] == "post") {
                 $cabinet = mysql_insert_id();
             }
 
-            $query = sprintf("INSERT INTO physical_systems VALUES ('%s', '%s', '%d', '%d', '%d', '%s')",
-                mysql_real_escape_string($hostname),
-                mysql_real_escape_string($serialnumber),
-                mysql_real_escape_string($cabinet),
-                mysql_real_escape_string($cabinetposition),
-                mysql_real_escape_string($model),
-                mysql_real_escape_string($assettag));
-            mysql_query($query);
+            if ($oldvirtualization == "virtual") {
+                $query = sprintf("INSERT INTO physical_systems VALUES ('%s', '%s', '%d', '%d', '%d', '%s')",
+                    mysql_real_escape_string($hostname),
+                    mysql_real_escape_string($serialnumber),
+                    mysql_real_escape_string($cabinet),
+                    mysql_real_escape_string($cabinetposition),
+                    mysql_real_escape_string($model),
+                    mysql_real_escape_string($assettag));
+                mysql_query($query);
+
+                $query = sprintf("DELETE FROM virtual_systems WHERE hostname='%s'", mysql_real_escape_string($hostname));
+                mysql_query($query);
+            } else {
+                $query = sprintf("UPDATE physical_systems SET serial_number='%s', cabinet_id='%d', cabinet_position='%d', model_id='%d', asset_tag='%s' WHERE hostname='%s'",
+                    mysql_real_escape_string($serialnumber),
+                    mysql_real_escape_string($cabinet),
+                    mysql_real_escape_string($cabinetposition),
+                    mysql_real_escape_string($model),
+                    mysql_real_escape_string($assettag),
+                    mysql_real_escape_string($hostname));
+                mysql_query($query);
+            }
         }
 
         if ($virtualization == "virtual") {
-            $query = sprintf("INSERT INTO virtual_systems VALUES ('%s', '%s')",
-                mysql_real_escape_string($hostname),
-                mysql_real_escape_string($host));
-            mysql_query($query);
+            if ($oldvirtualization == "physical") {
+                $query = sprintf("INSERT INTO virtual_systems VALUES ('%s', '%s')",
+                    mysql_real_escape_string($hostname),
+                    mysql_real_escape_string($host));
+                mysql_query($query);
+
+                $query = sprintf("DELETE FROM physical_systems WHERE hostname='%s'", mysql_real_escape_string($hostname));
+                mysql_query($query);
+            } else {
+                $query = sprintf("UPDATE virtual_systems SET physical_system_hostname='%s' WHERE hostname='%s'",
+                    mysql_real_escape_string($host),
+                    mysql_real_escape_string($hostname));
+                mysql_query($query);
+            }
         }
 
         # redirect to entryinfo upon insertion success
@@ -304,18 +399,18 @@ if (isset($_REQUEST["action"]) && $_REQUEST["action"] == "post") {
     }
 }
 
-$title = "Add System";
+$title = "Edit System";
 $javascript = "include/addsystem.js";
 include("include/header.inc");
 ?>
 
-<form method="post" action="addsystem.php">
+<form method="post" action="editsystem.php">
     <table id="formtable" class="formtable">
-        <tr><td colspan="2"><div class="formtitle">Add System</div></td></tr>
+        <tr><td colspan="2"><div class="formtitle">Edit System</div></td></tr>
     
         <tr>
             <td>Hostname</td>
-            <td><input type="text" name="hostname" value="<?php echo $hostname ?>" /> <?php echo $hostnameerror ?></td>
+            <td><input type="text" name="hostname" value="<?php echo $hostname ?>" readonly="readonly" /></td>
         </tr>
 
         <tr>
