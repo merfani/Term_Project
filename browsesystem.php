@@ -33,17 +33,13 @@ $show_results=0;
  
 $types = "";
 
+$type = array();
+$num_types = 0;
 if (isset($_REQUEST["server_type"])){
     $type = $_REQUEST["server_type"];
     removeNotSpecified($type);
     $num_types = count($type); 
 }
-else{
-    $type = "";
-    $num_types = 0;
-}
-
-$t1=$type[0];
 
 if (isset($_REQUEST["os_type"])){
     $os = $_REQUEST["os_type"];
