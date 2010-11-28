@@ -30,7 +30,7 @@ if (isset($_REQUEST["comment"] )){
 
 
 
-echo "<h1>$hostname</h1>";
+echo "<h1>$hostname</h1> <a href=\"javascript:window.opener.location='editsystem.php?hostname=" . urlencode($hostname) . "';window.close()\">Edit</a><br /><br />";
 
 
 
