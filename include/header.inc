@@ -19,7 +19,9 @@
 <!--            <div id="logo">System Inventory</div><br />-->
             <span id="menu">
                 <a href="addsystem.php">Add System</a><br />
-                <a href= "browsesystem.php">Browse Systems</a><br>  
+                <a href= "browsesystem.php">Browse Systems</a><br> 
+                <a href= "searchMain.html">Search Systems</a><br>
+				
           </span>
   
             <div id="content">
